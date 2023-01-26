@@ -177,6 +177,11 @@ def tile_saver(tiles:dict,type_dict:dict,output_dir:str,category: str,image_id: 
 
     Output:
     Saves tiles to file specified in function
+
+    Given these inputs, the function saves the given tiles in the correct directories trying to achieve 70/20/10 
+    train/val/test split.  Will not be exact as the test images need to be from distinct WSI from the train and val images.
+    It will tile an image into train/val then test to ensure that there are tiles in each set, then split into the sets
+    to achieve closest to the desired ratio.
     '''
     px = 1/plt.rcParams['figure.dpi']  # pixel in inches
 
