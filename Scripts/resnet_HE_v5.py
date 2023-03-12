@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# Code referenced from the following with slight adjustments for our H&E dataset:
 # License: BSD
 # Author: Sasank Chilamkurthy
 # Source URL: https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
@@ -19,12 +20,31 @@ import time
 import os
 import copy
 import re
+import argparse
+
+def get_args():
+    '''Argparse: Retrieves user-input arguments from command line.'''
+    parser = argparse.ArgumentParser(description="A program to classify H&E breast cancer images using a transfer-learning ResNet-18 model. Input: training and validation tiles root directory (-d), test tiles directory (-t), number of epochs (-e), batch size (-b).")
+
+    parser.add_argument("-d","--dirtrain",help="Root directory containing 'train' and 'val' subfolders, with each containing 5 subtype class folders of tile '.png' images",type=str)
+    parser.add_argument("-t","--testdir",help="Directory containing test tile '.png' images, organized into 5 subtype folders.",type=str)
+    parser.add_argument("-e","--epochnum",help="Number of training/validation epochs to run. Default = 10.",default=10,type=int)
+    parser.add_argument("-b","--batchsizenum",help="Number of training images in batch size (images to process as a batch in one training cycle). Default = 50.",default=50,type=int)
+
+    return parser.parse_args()
 
 cudnn.benchmark = True
 plt.ion() 
 
+#Retrieve argparse input
+args = get_args()
+input_traindir = args.dirtrain
+input_testdir = args.testdir
+input_epochs = args.epochnum
+input_batchsize = args.batchsizenum
+
 # Data augmentation and normalization for training
-# Just normalization for validation
+# Only normalization for validation
 data_transforms = {
     'train': transforms.Compose([
         # transforms.Resize(256),
@@ -44,11 +64,11 @@ data_transforms = {
     ]),
 }
 
-data_dir = '../balanced_data/'
+data_dir = input_traindir #'../PAM50_set/full_train/'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                 for x in ['train', 'val']}
-dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=50,
+dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=input_batchsize,
                                              shuffle=True, num_workers=2)
                 for x in ['train', 'val']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
@@ -167,11 +187,6 @@ def visualize_model(model, num_images=2):
             probabilities = torch.nn.functional.softmax(outputs[0], dim=0)*100
             #print("Probabilities: ",probabilities)
 
-            # # Show top categories per image - NOT WORKING
-            # top2_prob, top2_catid = torch.topk(probabilities, 2)
-            # for p in range(top2_prob.size(0)):
-            #     print(class_names[top2_catid[p]], top2_prob[p].item())
-
             for j in range(inputs.size()[0]):
                 images_so_far += 1
                 ax = plt.subplot(num_images//2, 2, images_so_far)
@@ -213,15 +228,15 @@ def plot_Val_Summaries(train_dict,val_dict):
     axis[1].plot(x_all,y_acc_val,label="Validation Accuracy")
     axis[1].set_title("Model Accuracy")
     axis[1].legend()
-    plt.savefig("Resnet_Val_Summary_v5_10STB_1500TpST_50B_Btest.png")
+    plt.savefig("Resnetv5_TrainVal_Summary_PAM50_e" + str(input_epochs) + "_b" + str(input_batchsize) + ".png")
     print("Summary graphs successfully created!")
     return None
 
-def plot_Test_Summaries(res_IDC_Basal_dict,res_IDC_HER2E_dict,res_IDC_LumA_dict,res_IDC_LumB_dict,res_IDC_nl_dict,res_ILC_Basal_dict,res_ILC_HER2E_dict,res_ILC_LumA_dict,res_ILC_LumB_dict,res_ILC_nl_dict):
+def plot_Test_Summaries(res_Basal_dict,res_HER2E_dict,res_LumA_dict,res_LumB_dict,res_nl_dict):
     '''Creates plots to display patterns in subtype data using dictionary input'''
-    c_vals = [res_IDC_Basal_dict["First Prediction Correct"],res_IDC_HER2E_dict["First Prediction Correct"],res_IDC_LumA_dict["First Prediction Correct"],res_IDC_LumB_dict["First Prediction Correct"],res_IDC_nl_dict["First Prediction Correct"],res_ILC_Basal_dict["First Prediction Correct"],res_ILC_HER2E_dict["First Prediction Correct"],res_ILC_LumA_dict["First Prediction Correct"],res_ILC_LumB_dict["First Prediction Correct"],res_ILC_nl_dict["First Prediction Correct"]]
+    c_vals = [res_Basal_dict["First Prediction Correct"],res_HER2E_dict["First Prediction Correct"],res_LumA_dict["First Prediction Correct"],res_LumB_dict["First Prediction Correct"],res_nl_dict["First Prediction Correct"]]
 
-    ac_vals = [(res_IDC_Basal_dict["First Prediction Correct"]+res_IDC_Basal_dict["Top 3 Prediction Correct"]),(res_IDC_HER2E_dict["First Prediction Correct"]+res_IDC_HER2E_dict["Top 3 Prediction Correct"]),(res_IDC_LumA_dict["First Prediction Correct"]+res_IDC_LumA_dict["Top 3 Prediction Correct"]),(res_IDC_LumB_dict["First Prediction Correct"]+res_IDC_LumB_dict["Top 3 Prediction Correct"]),(res_IDC_nl_dict["First Prediction Correct"]+res_IDC_nl_dict["Top 3 Prediction Correct"]),(res_ILC_Basal_dict["First Prediction Correct"]+res_ILC_Basal_dict["Top 3 Prediction Correct"]),(res_ILC_HER2E_dict["First Prediction Correct"]+res_ILC_HER2E_dict["Top 3 Prediction Correct"]),(res_ILC_LumA_dict["First Prediction Correct"]+res_ILC_LumA_dict["Top 3 Prediction Correct"]),(res_ILC_LumB_dict["First Prediction Correct"]+res_ILC_LumB_dict["Top 3 Prediction Correct"]),(res_ILC_nl_dict["First Prediction Correct"]+res_ILC_nl_dict["Top 3 Prediction Correct"])]
+    ac_vals = [(res_Basal_dict["First Prediction Correct"]+res_Basal_dict["Top 3 Prediction Correct"]),(res_HER2E_dict["First Prediction Correct"]+res_HER2E_dict["Top 3 Prediction Correct"]),(res_LumA_dict["First Prediction Correct"]+res_LumA_dict["Top 3 Prediction Correct"]),(res_LumB_dict["First Prediction Correct"]+res_LumB_dict["Top 3 Prediction Correct"]),(res_nl_dict["First Prediction Correct"]+res_nl_dict["Top 3 Prediction Correct"])]
     
     barWidth = 0.25
     fig = plt.subplots(figsize =(12, 8))
@@ -231,21 +246,21 @@ def plot_Test_Summaries(res_IDC_Basal_dict,res_IDC_HER2E_dict,res_IDC_LumA_dict,
     plt.bar(br2,ac_vals, color ='#8d8de5', width = barWidth, edgecolor ='black', label ='Top 3 Prediction Correct')
     #plt.xlabel("Breast Cancer Subtype",fontweight ='bold', fontsize = 15)
     plt.ylabel("Number of Tile Images",fontweight ='bold', fontsize = 15)
-    plt.title("ResNet-18 H&E Model Test Set Classification Result",fontweight ='bold', fontsize = 18)
+    plt.title("ResNet-18 H&E Model PAM50 Test Set Classification Result",fontweight ='bold', fontsize = 18)
     plt.xticks([r + barWidth*0.5 for r in range(len(c_vals))],
-        ['IDC Basal', 'IDC HER2E','IDC LumA','IDC LumB','IDC Normal-like','ILC Basal', 'ILC HER2E','ILC LumA','ILC LumB','ILC Normal-like'],fontsize = 12,rotation = 25)
+        ['Basal', 'HER2E','LumA','LumB','Normal-like'],fontsize = 12,rotation = 25)
     plt.yticks(fontsize = 15)
-    plt.ylim(0,600)
+    plt.ylim(0,(res_Basal_dict["First Prediction Correct"]+res_Basal_dict["Top 3 Prediction Correct"]+res_Basal_dict["Incorrect"])) #Set upper limit to expected maximum y value for BALANCED test set
     plt.legend(fontsize = 15)
-    plt.savefig("Resnet_Test_Summary_v5_10STB_1500TpST_50BS_Btest.png")
+    plt.savefig("Resnetv5_Test_Summary_PAM50_e" + str(input_epochs) + "_b" + str(input_batchsize) + ".png")
 
-def run_Test(resnet_model,labels,img_dir):
+def run_Test(resnet_model,labels,img_dir,actual_st):
     '''Run test set (in separate directory) through pre-trained resnet model'''
 
     from PIL import Image
     from torchvision import transforms
 
-    #Initialize acc/loss dict per image; key=img, value=(actual_label,prediction_label,prediction_percent)
+    #Initialize acc/loss dict per image; key=img, value=(actual_st,prediction_label,prediction_percent)
     test_dict = {}
     #Go through each image in directory
     i = 0
@@ -295,29 +310,17 @@ def run_Test(resnet_model,labels,img_dir):
         second_perc = pred_dict[2][1]
         third_label = pred_dict[3][0]
         third_perc = pred_dict[3][1]
-        actual_label = img_dir.split("/")[9]
-        if i <= 2: #FOR TESTING
-            print("Test IMG",i,"- Actual Subtype: ",actual_label)
-            print("Test IMG",i,"- Best Prediction: ",pred_label,pred_perc)
+        if i <= 2: #FOR TESTING - avoids all of test set being printed to stdout
+            print("Test IMG",i,"- Actual Subtype: ",actual_st)
+            print("Test IMG",i,"- Best Prediction: ",first_label,first_perc)
             # Print the top 5 scores along with the image label. Sort function is invoked on the torch to sort the scores.
             #_, indices = torch.sort(out, descending=True)
             print("Test IMG",i,"- Top 3 Predictions: ")
             for guess in pred_dict:
                 print(pred_dict[guess])
-        
-        #Print actual image name: - UNCOMMENT ONCE DIRECTORY IS MADE for prettier format?
-        # img_name = img.split("/")[-1]
-        # actual_hist = img_name.split("_")[2]
-        # if actual_hist == "ductal":
-        #     actual_hist = "IDC"
-        # else:
-        #     actual_hist = "ILC"
-        # actual_pam50 = img_name.split("_")[4].upper()
-        # actual_subtype = actual_hist+"_"+actual_pam50
-        # print("Actual Subtype: ",actual_subtype)
 
         #Add current img stats to dict
-        test_dict[img] = (actual_label,first_label,first_perc,second_label,second_perc,third_label,third_perc)
+        test_dict[img] = (actual_st,first_label,first_perc,second_label,second_perc,third_label,third_perc)
 
     #Determine model statistics
     result_dict = {"First Prediction Correct":0, "Top 3 Prediction Correct":0,"Incorrect":0}
@@ -352,11 +355,13 @@ optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
 # Decay LR by a factor of 0.1 every 7 epochs
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
+#Train model with above and input-specified parameters
 model_ft,train_sum_dict,val_sum_dict = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
-                       num_epochs=10)
+                       num_epochs=input_epochs)
 
-print("Train Summary: ",train_sum_dict)
-print("Val Summary: ",val_sum_dict)
+#Print out statistics for R graphing (added to make GIA poster figures)
+# print("Train Summary: ",train_sum_dict)
+# print("Val Summary: ",val_sum_dict)
 
 #Validation Acc/Loss Stats
 plot_Val_Summaries(train_sum_dict,val_sum_dict)
@@ -365,55 +370,30 @@ visualize_model(model_ft)
 
 #Running test sets:
 #IDC Basal
-dir_test_IDC_Basal = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_ductal_carcinoma_Basal/"
-print("IDC Basal TEST SET:")
-dict_IDC_Basal_res = run_Test(model_ft,class_names,dir_test_IDC_Basal)
+dir_test_Basal = input_testdir + "Basal/" #"/projects/bgmp/shared/groups/2022/z7t/goecks/PAM50_set/test/Basal/"
+print("Basal TEST SET:")
+dict_Basal_res = run_Test(model_ft,class_names,dir_test_Basal,"Basal")
 
 #IDC HER2E
-dir_test_IDC_HER2E = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_ductal_carcinoma_HER2E/"
-print("IDC HER2E TEST SET:")
-dict_IDC_HER2E_res = run_Test(model_ft,class_names,dir_test_IDC_HER2E)
+dir_test_HER2E = input_testdir + "HER2E/" #"/projects/bgmp/shared/groups/2022/z7t/goecks/PAM50_set/test/HER2E/"
+print("HER2E TEST SET:")
+dict_HER2E_res = run_Test(model_ft,class_names,dir_test_HER2E,"HER2E")
 
 #IDC LumA
-dir_test_IDC_LumA = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_ductal_carcinoma_LumA/"
-print("IDC LumA TEST SET:")
-dict_IDC_LumA_res = run_Test(model_ft,class_names,dir_test_IDC_LumA)
+dir_test_LumA = input_testdir + "LumA/" #"/projects/bgmp/shared/groups/2022/z7t/goecks/PAM50_set/test/LumA/"
+print("LumA TEST SET:")
+dict_LumA_res = run_Test(model_ft,class_names,dir_test_LumA,"LumA")
 
 #IDC LumB
-dir_test_IDC_LumB = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_ductal_carcinoma_LumB/"
-print("IDC LumB TEST SET:")
-dict_IDC_LumB_res = run_Test(model_ft,class_names,dir_test_IDC_LumB)
+dir_test_LumB = input_testdir + "LumB/" #"/projects/bgmp/shared/groups/2022/z7t/goecks/PAM50_set/test/LumB/"
+print("LumB TEST SET:")
+dict_LumB_res = run_Test(model_ft,class_names,dir_test_LumB,"LumB")
 
 #IDC normal-like
-dir_test_IDC_nl = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_ductal_carcinoma_normal-like/"
-print("IDC Normal-like TEST SET:")
-dict_IDC_nl_res = run_Test(model_ft,class_names,dir_test_IDC_nl)
-
-#ILC Basal
-dir_test_ILC_Basal = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_lobular_carcinoma_Basal/"
-print("ILC Basal TEST SET:")
-dict_ILC_Basal_res = run_Test(model_ft,class_names,dir_test_ILC_Basal)
-
-#ILC HER2E
-dir_test_ILC_HER2E = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_lobular_carcinoma_HER2E/"
-print("ILC HER2E TEST SET:")
-dict_ILC_HER2E_res = run_Test(model_ft,class_names,dir_test_ILC_HER2E)
-
-#ILC LumA
-dir_test_ILC_LumA = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_lobular_carcinoma_LumA/"
-print("ILC LumA TEST SET:")
-dict_ILC_LumA_res = run_Test(model_ft,class_names,dir_test_ILC_LumA)
-
-#ILC LumB
-dir_test_ILC_LumB = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_lobular_carcinoma_LumB/"
-print("ILC LumB TEST SET:")
-dict_ILC_LumB_res = run_Test(model_ft,class_names,dir_test_ILC_LumB)
-
-#ILC normal-like
-dir_test_ILC_nl = "/projects/bgmp/shared/groups/2022/z7t/goecks/balanced_data_test/Invasive_lobular_carcinoma_normal-like/"
-print("ILC Normal-like TEST SET:")
-dict_ILC_nl_res = run_Test(model_ft,class_names,dir_test_ILC_nl)
+dir_test_nl = input_testdir + "normal-like/" #"/projects/bgmp/shared/groups/2022/z7t/goecks/PAM50_set/test/normal-like/"
+print("Normal-like TEST SET:")
+dict_nl_res = run_Test(model_ft,class_names,dir_test_nl,"normal-like")
 
 #Plot overall test set results - prediction accuracies by subtype
-plot_Test_Summaries(dict_IDC_Basal_res,dict_IDC_HER2E_res,dict_IDC_LumA_res,dict_IDC_LumB_res,dict_IDC_nl_res,dict_ILC_Basal_res,dict_ILC_HER2E_res,dict_ILC_LumA_res,dict_ILC_LumB_res,dict_ILC_nl_res)
+plot_Test_Summaries(dict_Basal_res,dict_HER2E_res,dict_LumA_res,dict_LumB_res,dict_nl_res)
 print("Test Summary Graph Successfully Created!")
