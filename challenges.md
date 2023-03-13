@@ -10,7 +10,7 @@ Class imbalance alongside smaller sample size is likely introducing sampling bia
 
 The initial difference between n samples for minority and majority subclasses is significant across histological and PAM50 subtypes. We attempted to minimize this effect by tiling the raw image data, in order to inflate samples per raw image. However, the imbalance persists throughout preprocessing. 
 
-Therefore, we’ve implemented a downsampling method to ensure that each subtype class has the same amount of data. This method involves taking a random sample of each subtype based on the number of samples in the minority class, and using this as input. While this guaranteed that the classes would be balanced, there was significant data loss due to the minority class being much less than the average sample size per class. 
+Therefore, we’ve implemented a downsampling method to ensure that each subtype class has the same amount of data. This method involves taking a random sample of each subtype based on the number of samples in the minority class, and using this as input. (balance.py) While this guaranteed that the classes would be balanced, there was significant data loss due to the minority class being much less than the average sample size per class. 
 
 Thus, we’ve adjusted the scope of the model from classifying histological and PAM50 subtypes (10 classes), to classifying PAM50 subtypes only. (5 Classes) Even so, there is an insignificant performance increase. (See latest version of ResNet script results) In future efforts, we suggest that initial manifests from TCGA consist of more data, and class balance in mind. 
 
