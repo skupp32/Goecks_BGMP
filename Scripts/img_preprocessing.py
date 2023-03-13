@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument("-o","--output_dir", help = "The file directory of the output png with preprocessed tiles", default = '.')
     parser.add_argument("-c","--category", help = 'Chooses PAM50 subtype or Histological Annotation for tile sorting post pre-processing.  Enter PAM50, ANNOTATION, or both',choices = ['PAM50','ANNOTATION','both'], default = 'PAM50')
     parser.add_argument("-m","--manifest", help = 'Path to manifest file to assosiate an image id with its classification', required = True)
-    parser.add_argument("-n","--num_limit", help = "Number of tiles of each subtype to be processed.  Must be an integer", type = int)
+    parser.add_argument("-n","--num_limit", help = "Number of tiles of each subtype to be processed.  Must be an integer", type = int, default = 5)
     return parser.parse_args()
 	
 args = get_args()
