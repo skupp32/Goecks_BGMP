@@ -37,9 +37,11 @@ def image_tiler(image_obj, level: int, tile_size: int): #(dict,tuple):
     Reads in openslide object and creates tiles with specified size at the specified level.
     Returns the tiles in a dictionary, and the number of tiles in every row and column
     '''
+    #Create tiles
     tiles = deepzoom.DeepZoomGenerator(image_obj, tile_size, overlap = 0, limit_bounds = True)
     num_tiles = tiles.level_tiles[level]
 
+    # Dictionary where key is row,col tile position in the WSI and the value is the tile itself.
     tile_dict = {}
 
     for col in range(num_tiles[1]):
@@ -139,7 +141,7 @@ def gmm_cutoff_calc(tiles: dict,tile_array_shape,num_components: int)-> int:
             num_pixels = cp.size(tile_array)
             mean_array[row,col] = float(cp.mean(cp.random.choice(tile_array.ravel(),num_pixels//2,replace = False))) #randomly samples tile to calculate mean intensity
 
-
+    #Removes tiles that are predominantly black as they are unlikely to contain stain
     mean_array = mean_array[mean_array > 100]
     mean_array = cp.log1p(mean_array)
 
@@ -250,12 +252,15 @@ def tile_saver(tiles:dict,type_dict:dict,output_dir:str,category: str,image_id: 
         
         plt.close()
 
+        print(f'{img_class}- train:{num_train}, validation:{num_val}, test:{num_test}')
+
 
 #Ensures that the file saving commands are correct format
 if out_name.endswith('/'):
     out_name = out_name[:-1]
 
 img_type_dict = {} #Dictionary where the slide filename from manifest is the key and (Histological Annotation, PAM50 Subtype) is the value
+wsi_type_count = {} #Dictionary where subtype is key and the number of processed WSI is the value
 
 
 #Creates folders to save images in depending on type of classification
@@ -264,7 +269,7 @@ sets = ['train','val','test']
 if cat.lower() == 'pam50':
     for set in sets:
         for type in ['Basal','LumA','LumB','normal-like','HER2E']:
-
+            wsi_type_count[type] = 0
             try:
                 if set == 'train' or set == 'val':
                     os.makedirs(f'{out_name}/full_train/{set}/{type}')
@@ -276,7 +281,7 @@ if cat.lower() == 'pam50':
 elif cat.lower() == 'annotation':
     for set in sets:
         for type in ['Invasive_lobular_carcinoma','Invasive_ductal_carcinoma']:
-
+            wsi_type_count[type] = 0
             try:
                 if set == 'train' or set == 'val':
                     os.makedirs(f'{out_name}/full_train/{set}/{type}')
@@ -290,7 +295,7 @@ elif cat.lower() == 'both':
         for type1 in ['Basal','LumA','LumB','normal-like','HER2E']:
             for type2 in ['Invasive_lobular_carcinoma','Invasive_ductal_carcinoma']:
                 type = f'{type2}_{type1}'
-                
+                wsi_type_count[type] = 0
                 try:
                     if set == 'train' or set == 'val':
                         os.makedirs(f'{out_name}/full_train/{set}/{type}')
@@ -315,7 +320,7 @@ with open(man_file,'r') as man:
 #Dictionary where key is subtype classification and value is the number of slides that have been processed of that type
 print("** Manifest File Parsed **")
 
-wsi_type_count = {}
+#wsi_type_count = {}
 file_list = os.listdir(img_dir)
 random.shuffle(file_list)
 
@@ -341,13 +346,10 @@ for img_name in file_list:
         subtype = hist_ann
     
     #Ensures that only the desired number of WSI are processed
-    if subtype not in wsi_type_count:
-        wsi_type_count[subtype] = 1
+    if wsi_type_count[subtype] < svs_lim:
+        wsi_type_count[subtype] += 1
     else:
-        if wsi_type_count[subtype] < svs_lim:
-            wsi_type_count[subtype] += 1
-        else:
-            continue
+        continue
 
 
     #Actual preprocessing steps
@@ -358,20 +360,10 @@ for img_name in file_list:
     lower_bound, upper_bound = gmm_cutoff_calc(tile_dictionary, number_tiles,3)
     print('** Intensity Cutoff Calculated **')
 
-    filtered_norm_tile_dict = tile_filter_norm(tile_dictionary,number_tiles,lower_bound,upper_bound, 'h')
-    print('** Tiles Filtered and Normalized **')
-
-    if float(cp.random.rand(1)) < 1/10:
-        filtered_slide_reconstruction_plotter(filtered_norm_tile_dict, number_tiles)
-        print('** Whole Slide Image Reconstructed **')
-
-    tile_saver(filtered_norm_tile_dict, img_type_dict, out_name, cat, image_id)
-    print('** Hematoxylin Tiles Saved **')
-
     filtered_norm_tile_dict = tile_filter_norm(tile_dictionary,number_tiles,lower_bound,upper_bound, 'all')
     print('** Tiles Filtered and Normalized **')
 
-    tile_saver(filtered_norm_tile_dict, img_type_dict, '/projects/bgmp/shared/groups/2022/z7t/goecks/hematoxylin_comp_set/', cat, image_id)
-    print('** Normalized Tiles Saved **')
+    tile_saver(filtered_norm_tile_dict, img_type_dict, out_name, cat, image_id)
+    print('** Tiles Saved **')
 
 print(wsi_type_count)
