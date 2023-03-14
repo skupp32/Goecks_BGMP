@@ -11,6 +11,7 @@ This repository contains the following directories and files:
     * final_TCGA_sample_manifest.txt: 875 TCGA H&E breast cancer slides with histological and clinical annotations for each image, along with unique slide IDs. Other breast cancer annotations are also included in this tab-separated file, but these are not used in this project.
     * GDC_download_manifest.txt: 875 TCGA image filenames corresponding to each of the 875 slide IDs in the above manifest file.
 * Scripts: Contains the collection of scripts written for this project, along with accompanying README markdowns describing the usage script, and relevant background/supplementary information. Below is a table summarizing all scripts and READMEs in the order in which they are typically run:
+
 |Script Name |Script README |
 |--|--|
 |[transform_tile.py](Scripts/transform_tile.py) |[README_transform_tile.md](Scripts/README_transform_tile.md) |
