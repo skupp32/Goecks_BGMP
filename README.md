@@ -7,16 +7,18 @@ This repositiory contains a collection of bash and python scripts to download, p
 ## Repository Contents
 
 This repository contains the following directories and files:
-* **Manifests:** Contains the two initial The Cancer Genome Atlas (TCGA) manifest files - provided by OHSU project mentors 
-    * final_TCGA_sample_manifest.txt: 875 TCGA H&E breast cancer slides with histological and clinical annotations for each image, along with unique slide IDs. Other breast cancer annotations are also included in this tab-separated file, but these are not used in this project.
-    * GDC_download_manifest.txt: 875 TCGA image filenames corresponding to each of the 875 slide IDs in the above manifest file.
-* **Scripts:** Contains the collection of scripts written for this project, along with accompanying README markdowns describing the usage script, and relevant background/supplementary information. Below is a table summarizing all scripts and READMEs in the order in which they are typically run:
+* <ins>**Manifests:**</ins> Contains the two initial The Cancer Genome Atlas (TCGA) manifest files - provided by OHSU project mentors 
+    * [final_TCGA_sample_manifest.txt](Manifests/final_TCGA_sample_manifest.txt): 875 TCGA H&E breast cancer slides with histological and clinical annotations for each image, along with unique slide IDs. Other breast cancer annotations are also included in this tab-separated file, but these are not used in this project.
+    * [GDC_download_manifest.txt](Manifests/GDC_download_manifest.txt): 875 TCGA image filenames corresponding to each of the 875 slide IDs in the above manifest file.
+    * [README_download_images.md](Manifests/README_download_images.md): README file describing how to download TCGA images.
+* <ins>**Scripts:**</ins> Contains the collection of scripts written for this project, along with accompanying README markdowns describing the usage script, and relevant background/supplementary information. Below is a table summarizing all scripts and READMEs in the order in which they are typically run:
 
 |Script Name |Script README |
 |--|--|
+|Bash Command - See Manifests |[README_download_images.md](Manifests/README_download_images.md)|
 |[transform_tile.py](Scripts/transform_tile.py) |[README_transform_tile.md](Scripts/README_transform_tile.md) |
 |[img_preprocessing.py](Scripts/img_preprocessing.py) |[README_img_preprocessing.md](Scripts/README_img_preprocessing.md) |
 |[balance.py](Scripts/balance.py) |[README_balance.md](Scripts/README_balance.md) |
 |[resnet_HE_v5.py](Scripts/resnet_HE_v5.py) |[README_resnet_HE_v5.md](Scripts/README_resnet_HE_v5.md) |
-* **Result_Images:** Contains relevant result images generated over the course of the project, which are referenced and described in other markdowns throughout this repository.
-* **Goecks_BGMP_References.pdf:** List of references consulted during this project.
+* <ins>**Result_Images:**</ins> Contains relevant result images generated over the course of the project, which are referenced and described in other markdowns throughout this repository.
+* **[Goecks_BGMP_References.pdf](Goecks_BGMP_References.pdf):** List of references consulted during this project.
