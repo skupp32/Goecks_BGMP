@@ -7,7 +7,7 @@ This repository contains a collection of bash and python scripts to download, pr
 ## Repository Contents
 
 This repository contains the following directories and files:
-* <ins>**Environments:**</ins> Contains a yml file and a md file listing the conda and pip packages used for these scripts.
+* <ins>**Environments:**</ins> Contains yml files and a md file listing the conda and pip packages used for these scripts.
 * <ins>**Manifests:**</ins> Contains the two initial The Cancer Genome Atlas (TCGA) manifest files - provided by OHSU project mentors 
     * [final_TCGA_sample_manifest.txt](Manifests/final_TCGA_sample_manifest.txt): 875 TCGA H&E breast cancer slides with histological and clinical annotations for each image, along with unique slide IDs. Other breast cancer annotations are also included in this tab-separated file, but these are not used in this project.
     * [GDC_download_manifest.txt](Manifests/GDC_download_manifest.txt): 875 TCGA image filenames corresponding to each of the 875 slide IDs in the above manifest file.
