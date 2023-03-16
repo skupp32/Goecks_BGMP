@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repositiory contains a collection of bash and python scripts to download, preprocess, and classify hematoxylin and eosin (H&E) whole slide image (WSI) breast cancer slides by clinical subtype. This project was contributed to by University of Oregon Knight Campus Bioinformatic and Genomics Master's Program students - Sam Kupp, Davin Marro, Sophia Soriano, Pranav Muthuraman - in collaboration with mentors at the OHSU Knight Cancer Institute Goecks Lab - Cameron Watson and Dr. Allison Creason.
+This repository contains a collection of bash and python scripts to download, preprocess, and classify hematoxylin and eosin (H&E) whole slide image (WSI) breast cancer slides by clinical subtype. This project was contributed to by University of Oregon Knight Campus Bioinformatic and Genomics Master's Program students - Sam Kupp, Davin Marro, Sophia Soriano, Pranav Muthuraman - in collaboration with mentors at the OHSU Knight Cancer Institute Goecks Lab - Cameron Watson and Dr. Allison Creason.
 
 ## Repository Contents
 
